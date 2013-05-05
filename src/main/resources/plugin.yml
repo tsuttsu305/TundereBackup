@@ -1,0 +1,17 @@
+name: TundereBackup
+main: net.tsuttsu305.tunderebackup.TundereBackup
+version: 0.0.1
+author: tsuttsu305
+commands:
+  backup:
+    description: BackupCommand
+    permission: tunderebackup.backup
+    usage: /backup - Backup Now
+permissions:
+  tunderebackup.*:
+    description: Gives all Access
+    children:
+      tunderebackup.backup: true
+  tunderebackup.backup:
+    description: Backup Now
+    default: OP

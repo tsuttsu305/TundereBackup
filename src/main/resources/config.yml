@@ -1,0 +1,30 @@
+########
+# Core #
+########
+AutoSave: true
+AutoBackup: true
+BackupDir: ./backup/
+
+############
+# AutoSave #
+############
+#AutoSave Interval (minutes)
+SaveInterval: 30
+
+##########
+# Backup #
+##########
+#AutoBackup Interval (hour)
+AutoBackupInterval: 3
+MaxBackupFiles: 100
+ExcludeWorld:
+  - ''
+BackupPlugins: true
+ExcludePlugin:
+  - ''
+ZipBackup: true
+NameFormat: yy-MM-dd-HH-mm
+
+
+#do not edit 
+ConfVer: 1
