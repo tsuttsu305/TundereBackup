@@ -7,6 +7,7 @@ package net.tsuttsu305.tunderebackup.save;
 import java.util.List;
 
 import net.tsuttsu305.tunderebackup.TundereBackup;
+import net.tsuttsu305.tunderebackup.backup.Backup;
 
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -24,6 +25,8 @@ public class AutoSave extends BukkitRunnable{
 
     @Override
     public void run() {
+        if (Backup.isBackupNow)return;
+        
         List<World> worlds = plugin.getServer().getWorlds();
         
         for (World world : worlds) {
