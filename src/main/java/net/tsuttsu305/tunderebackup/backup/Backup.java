@@ -16,6 +16,7 @@ import net.tsuttsu305.tunderebackup.TundereBackup;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.command.ConsoleCommandSender;
 
 /**
  * Backup (Backup.java)
@@ -52,8 +53,10 @@ class BackupTask extends Thread{
         plugin.getServer().broadcastMessage(ChatColor.LIGHT_PURPLE + "[AutoBackup] Backupを開始します。ラグに注意してください");
         Backup.isBackupNow = true;
         
+        ConsoleCommandSender con = plugin.getServer().getConsoleSender();
         
-        List<World> targetWorlds = saveAllWorlds();
+        
+        List<World> targetWorlds = saveAllWorlds(con);
         
         //Backup保存先Directory
         File backupDir = new File(TundereBackup.getConf().getBackupDir());
@@ -75,7 +78,7 @@ class BackupTask extends Thread{
         }
         
         //最大数制限のやつ
-        if (backupDir.list().length > TundereBackup.getConf().getMaxBackupFiles()+1){
+        if (backupDir.list().length > TundereBackup.getConf().getMaxBackupFiles()){
             chkOldBackupFiles(backupDir);
         }
         
@@ -104,10 +107,10 @@ class BackupTask extends Thread{
         }
         
         //Worldをもとに戻す
-        for (World world : targetWorlds) {
+        for (World world : plugin.getServer().getWorlds()) {
             world.setAutoSave(true);
-            world.save();
         }
+        plugin.getServer().dispatchCommand(con, "save-on");
         
         plugin.getServer().broadcastMessage(ChatColor.GREEN + "[AutoBackup] Backupが完了しました。");
         TundereBackup.getLog().info("Backup completed");
@@ -133,7 +136,10 @@ class BackupTask extends Thread{
         return result;
     }
 
-    private List<World> saveAllWorlds() {
+    private List<World> saveAllWorlds(ConsoleCommandSender con) {
+        plugin.getServer().dispatchCommand(con, "save-all");
+        plugin.getServer().dispatchCommand(con, "save-off");
+        
         //除外World Listを取得
         List<String> ecWorlds = TundereBackup.getConf().getExcludeWorld();
         
@@ -142,10 +148,9 @@ class BackupTask extends Thread{
         
         for (World world : plugin.getServer().getWorlds()) {
             if (ecWorlds.contains(world.getName()) == false){
-                world.setAutoSave(false);
-                world.save();
                 targetWorlds.add(world);
             }
+            world.setAutoSave(false);
         }
         plugin.getServer().savePlayers();
         return targetWorlds;
@@ -194,13 +199,13 @@ class BackupTask extends Thread{
                 try {
                     FileUtils.copyDirectory(file, new File(temp.getAbsolutePath() + "/plugins", fName));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    TundereBackup.getLog().info(file.getAbsoluteFile() + " is not backup! " + e.getMessage());
                 }
             }else {
                 try {
                     FileUtils.copyFile(file, new File(temp.getAbsolutePath() + "/plugins", fName));
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    TundereBackup.getLog().info(file.getAbsoluteFile() + " is not backup! " + e.getMessage());
                 }
             }
         }

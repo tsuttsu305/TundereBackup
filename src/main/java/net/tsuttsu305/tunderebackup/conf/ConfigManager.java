@@ -45,6 +45,8 @@ public class ConfigManager {
         conf = YamlConfiguration.loadConfiguration(confFile);
         
         chkVer();
+        
+        TundereBackup.getLog().info("Loaded Config.yml.");
     }
     
     private void chkVer(){

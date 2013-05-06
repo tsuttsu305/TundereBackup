@@ -11,6 +11,7 @@ import net.tsuttsu305.tunderebackup.backup.Backup;
 
 import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -26,6 +27,9 @@ public class AutoSave extends BukkitRunnable{
     @Override
     public void run() {
         if (Backup.isBackupNow)return;
+        
+        ConsoleCommandSender con = plugin.getServer().getConsoleSender();
+        plugin.getServer().dispatchCommand(con, "save-all");
         
         List<World> worlds = plugin.getServer().getWorlds();
         

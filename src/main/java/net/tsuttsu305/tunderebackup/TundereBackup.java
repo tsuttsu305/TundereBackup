@@ -12,6 +12,7 @@ import net.tsuttsu305.tunderebackup.conf.ConfigManager;
 import net.tsuttsu305.tunderebackup.save.AutoSave;
 
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -79,21 +80,47 @@ public class TundereBackup extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("backup")){
-            if (sender instanceof Player){
-                Player player = (Player)sender;
-                if (player.hasPermission("tunderebackup.backup")){
+            if (args.length == 0) {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    if (player.hasPermission("tunderebackup.backup")) {
+                        Backup back = new Backup(plugin);
+                        back.startBackup();
+                        return true;
+                    } else {
+                        player.sendMessage(ChatColor.RED + "権限がありません!");
+                        return true;
+                    }
+                } else {
                     Backup back = new Backup(plugin);
                     back.startBackup();
                     return true;
-                }else{
-                    player.sendMessage(ChatColor.RED + "権限がありません!");
-                    return true;
                 }
             }else{
-                Backup back = new Backup(plugin);
-                back.startBackup();
-                return true;
+                if (args[0].equalsIgnoreCase("debug")){
+                    if (!(sender instanceof Player)){
+                        for(World world : getServer().getWorlds()){
+                            logger.info(world.getName() + ": " + world.isAutoSave());
+                        }
+                    }
+                }else if (args[0].equalsIgnoreCase("reload")){
+                    if (sender instanceof Player) {
+                        Player player = (Player) sender;
+                        if (player.hasPermission("tunderebackup.reload")) {
+                            conf.load();
+                            player.sendMessage(ChatColor.GREEN + "[TundereBackup] Reload Config SUCCESS");
+                            return true;
+                        } else {
+                            player.sendMessage(ChatColor.RED + "権限がありません!");
+                            return true;
+                        }
+                    } else {
+                        conf.load();
+                        return true;
+                    }
+                }
             }
+            return true;
         }
         
         return false;
