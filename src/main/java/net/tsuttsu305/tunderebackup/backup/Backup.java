@@ -53,20 +53,7 @@ class BackupTask extends Thread{
         Backup.isBackupNow = true;
         
         
-        //除外World Listを取得
-        List<String> ecWorlds = TundereBackup.getConf().getExcludeWorld();
-        
-        //除外World以外セーブし自動セーブを解除 targetに追加
-        List<World> targetWorlds = new ArrayList<>();
-        
-        for (World world : plugin.getServer().getWorlds()) {
-            if (ecWorlds.contains(world.getName()) == false){
-                world.setAutoSave(false);
-                world.save();
-                targetWorlds.add(world);
-            }
-        }
-        plugin.getServer().savePlayers();
+        List<World> targetWorlds = saveAllWorlds();
         
         //Backup保存先Directory
         File backupDir = new File(TundereBackup.getConf().getBackupDir());
@@ -89,83 +76,31 @@ class BackupTask extends Thread{
         
         //最大数制限のやつ
         if (backupDir.list().length > TundereBackup.getConf().getMaxBackupFiles()+1){
-            long d = Long.MAX_VALUE;
-            File del = null;
-            for(File f:backupDir.listFiles()){
-                if (f.getName().equalsIgnoreCase("temp"))continue;
-                
-                if (f.lastModified() < d){
-                    d = f.lastModified();
-                    del = f;
-                }
-            }
-            if (del == null){
-                
-            }else if (del.isDirectory()){
-                try {
-                    FileUtils.deleteDirectory(del);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }else{
-                del.delete();
-            }
+            chkOldBackupFiles(backupDir);
         }
         
         
         //WorldCopy
-        for (World world : targetWorlds) {
-            File worldFile = new File(System.getProperty("user.dir"), world.getName());
-            try {
-                FileUtils.copyDirectory(worldFile, new File(temp.getAbsolutePath(), world.getName()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        copyWorlds(targetWorlds, temp);
         
         if (TundereBackup.getConf().isBackupPlugins()){
-            List<String> ecPlugin = TundereBackup.getConf().getExcludePlugin();
-            
-            File plugins = new File(System.getProperty("user.dir"), "plugins");
-            fname: for (String fName : plugins.list()) {
-                String f = fName.replace(".jar", "");
-                for (String string : ecPlugin) {
-                    if (string.toLowerCase().equalsIgnoreCase(f)){
-                        continue fname;
-                    }
-                }
-                
-                File file = new File(plugins.getAbsolutePath(), fName);
-                if (file.isDirectory()){
-                    try {
-                        FileUtils.copyDirectory(file, new File(temp.getAbsolutePath() + "/plugins", fName));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }else {
-                    try {
-                        FileUtils.copyFile(file, new File(temp.getAbsolutePath() + "/plugins", fName));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            backupPlugins(temp);
         }
         
         //Result File Name
-        SimpleDateFormat sdf = new SimpleDateFormat(TundereBackup.getConf().getNameFormat());
-        Date date = new Date();
-        String result = sdf.format(date);
+        String result = getResultFileName();
+        File re = new File(backupDir, result);
+        temp.renameTo(re);
         
         //Zip
         if (TundereBackup.getConf().isZipBackup()){
             try {
-                Zip.createZip(temp, new File(backupDir.getPath(), result + ".zip"));
+                //Zip.createZip(temp, new File(backupDir, result + ".zip"));
+                ZipUtil.archiveZip(re, new File(backupDir, re.getName() + ".zip"));
+                FileUtils.deleteDirectory(re);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }else{
-            temp.renameTo(new File(backupDir.getAbsolutePath(), result));
         }
         
         //Worldをもとに戻す
@@ -178,5 +113,96 @@ class BackupTask extends Thread{
         TundereBackup.getLog().info("Backup completed");
         
         Backup.isBackupNow = false;
+    }
+
+    private void copyWorlds(List<World> targetWorlds, File temp) {
+        for (World world : targetWorlds) {
+            File worldFile = new File(System.getProperty("user.dir"), world.getName());
+            try {
+                FileUtils.copyDirectory(worldFile, new File(temp.getAbsolutePath(), world.getName()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getResultFileName() {
+        SimpleDateFormat sdf = new SimpleDateFormat(TundereBackup.getConf().getNameFormat());
+        Date date = new Date();
+        String result = sdf.format(date);
+        return result;
+    }
+
+    private List<World> saveAllWorlds() {
+        //除外World Listを取得
+        List<String> ecWorlds = TundereBackup.getConf().getExcludeWorld();
+        
+        //除外World以外セーブし自動セーブを解除 targetに追加
+        List<World> targetWorlds = new ArrayList<>();
+        
+        for (World world : plugin.getServer().getWorlds()) {
+            if (ecWorlds.contains(world.getName()) == false){
+                world.setAutoSave(false);
+                world.save();
+                targetWorlds.add(world);
+            }
+        }
+        plugin.getServer().savePlayers();
+        return targetWorlds;
+    }
+
+    private void chkOldBackupFiles(File backupDir) {
+        long d = Long.MAX_VALUE;
+        File del = null;
+        for(File f:backupDir.listFiles()){
+            if (f.getName().equalsIgnoreCase("temp"))continue;
+            
+            if (f.lastModified() < d){
+                d = f.lastModified();
+                del = f;
+            }
+        }
+        if (del == null){
+            
+        }else if (del.isDirectory()){
+            try {
+                FileUtils.deleteDirectory(del);
+                TundereBackup.getLog().info("Delete old Backup: " + del.getAbsolutePath());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else{
+            del.delete();
+            TundereBackup.getLog().info("Delete old Backup: " + del.getAbsolutePath());
+        }
+    }
+
+    private void backupPlugins(File temp) {
+        List<String> ecPlugin = TundereBackup.getConf().getExcludePlugin();
+        
+        File plugins = new File(System.getProperty("user.dir"), "plugins");
+        fname: for (String fName : plugins.list()) {
+            String f = fName.replace(".jar", "");
+            for (String string : ecPlugin) {
+                if (string.toLowerCase().equalsIgnoreCase(f)){
+                    continue fname;
+                }
+            }
+            
+            File file = new File(plugins.getAbsolutePath(), fName);
+            if (file.isDirectory()){
+                try {
+                    FileUtils.copyDirectory(file, new File(temp.getAbsolutePath() + "/plugins", fName));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }else {
+                try {
+                    FileUtils.copyFile(file, new File(temp.getAbsolutePath() + "/plugins", fName));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
