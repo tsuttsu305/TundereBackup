@@ -3,7 +3,7 @@
 ########
 AutoSave: true
 AutoBackup: true
-BackupDir: ./backup/
+BackupDir: ./backups/
 
 ############
 # AutoSave #
@@ -15,15 +15,15 @@ SaveInterval: 30
 # Backup #
 ##########
 #AutoBackup Interval (hour)
-AutoBackupInterval: 3
-MaxBackupFiles: 100
+AutoBackupInterval: 12
+MaxBackupFiles: 30
 ExcludeWorld:
   - ''
 BackupPlugins: true
 ExcludePlugin:
   - ''
 ZipBackup: true
-NameFormat: yy-MM-dd-HH-mm
+NameFormat: yy-MM-dd_HH-mm-ss
 
 
 #do not edit 
