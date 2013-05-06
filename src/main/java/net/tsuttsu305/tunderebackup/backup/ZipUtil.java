@@ -20,6 +20,12 @@ import org.apache.tools.zip.ZipOutputStream;
 public class ZipUtil {
     private ZipUtil() {}
     
+    /**
+     * ディレクトリの中をzipに圧縮する。<br>
+     * ディレクトリ内のFileがzipを開くとrootにある
+     * @param srcDir 対象ディレクトリ
+     * @param dest 出力先zipファイル
+     */
     public static void archiveZip(File srcDir, File dest){
         ZipOutputStream zos = null;
         try {
