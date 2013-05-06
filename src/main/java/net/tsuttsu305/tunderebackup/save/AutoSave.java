@@ -35,6 +35,6 @@ public class AutoSave extends BukkitRunnable{
         
         plugin.getServer().savePlayers();
         TundereBackup.getLog().info("AutoSave Completed");
-        plugin.getServer().broadcastMessage(ChatColor.DARK_GREEN + "[AutoSave] 自動セーブ完了");
+        plugin.getServer().broadcastMessage(ChatColor.GREEN + "[AutoSave] 自動セーブ完了");
     }
 }
